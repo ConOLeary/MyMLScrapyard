@@ -3,7 +3,7 @@ import csv
 from numpy import * # Related to data formatting
 import pygal
 
-def getLinePoints(b, m, vals):
+def getLinePoints(b, m, vals):s
     linepoints = []
     last_y = b
     linepoints.append((0, last_y))

@@ -3,6 +3,9 @@ import csv
 from numpy import *
 import pygal
 
+gradientd_graf = pygal.XY(stroke=False)
+gradientd_graf.title = 'gradient_descent_grafaroo'
+
 def compute_error_for_line_given_points(b, m, points):
     totalError = 0
     for i in range(0, len(points)):
@@ -29,6 +32,9 @@ def gradient_descent_runner(points, starting_b, starting_m, learning_rate, step_
     m = starting_m
     for i in range(step_volume):
         b, m = step_gradient(b, m, points, learning_rate)
+        if (i % 500 == 0):
+            linepoints = getLinePoints(b, m, points)
+            gradientd_graf.add('Prediction', linepoints)
     return [b, m]
 
 ####################################################################################################
@@ -54,11 +60,11 @@ def run():
             xy_vals.append((i, float(row[1])))
             i = i + 1
     
-
+    
     points = y_vals
-    learning_rate = 0.0000001
+    learning_rate = 0.000000002
     initial_b = 450 # initial y-intercept guess
-    initial_m = -0.4 # initial slope guess
+    initial_m = 0 # initial slope guess
     step_volume = 5000
     print ("\n\nStarting gradient descent at b = {0}, m = {1}, error = {2}".format(initial_b, initial_m, compute_error_for_line_given_points(initial_b, initial_m, points)))
     print ("Running...")
@@ -66,11 +72,14 @@ def run():
     print ("After {0} iterations b = {1}, m = {2}, error = {3}".format(step_volume, b, m, compute_error_for_line_given_points(b, m, points)))
 
     linepoints = getLinePoints(b, m, y_vals)
+
     xy_chart = pygal.XY(stroke=False)
     xy_chart.title = 'pls werk'
     xy_chart.add('Values', xy_vals)
+    gradientd_graf.add('Values', xy_vals)
     xy_chart.add('Prediction', linepoints)
     xy_chart.render_to_file('pls_werk.svg')
+    gradientd_graf.render_to_file('gradientd_graf.svg')
 
 if __name__ == '__main__':
     run()
