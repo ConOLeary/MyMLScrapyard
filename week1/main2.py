@@ -3,8 +3,11 @@ import csv
 from numpy import *
 import pygal
 
+every_nvalues = 500
+
 gradientd_graf = pygal.XY(stroke=False)
-gradientd_graf.title = 'gradient_descent_grafaroo'
+costvstime_graf = pygal.Line(x_title='Number of steps taken', y_title='Cost')
+costvals = []
 
 def compute_error_for_line_given_points(b, m, points):
     totalError = 0
@@ -32,9 +35,10 @@ def gradient_descent_runner(points, starting_b, starting_m, learning_rate, step_
     m = starting_m
     for i in range(step_volume):
         b, m = step_gradient(b, m, points, learning_rate)
-        if (i % 500 == 0):
+        if (i % every_nvalues == 0):
             linepoints = getLinePoints(b, m, points)
             gradientd_graf.add('Prediction', linepoints)
+            costvals.append(compute_error_for_line_given_points(b, m, points))
     return [b, m]
 
 ####################################################################################################
@@ -71,15 +75,31 @@ def run():
     [b, m] = gradient_descent_runner(points, initial_b, initial_m, learning_rate, step_volume)
     print ("After {0} iterations b = {1}, m = {2}, error = {3}".format(step_volume, b, m, compute_error_for_line_given_points(b, m, points)))
 
+    initial_b = 450 # initial y-intercept guess
+    initial_m = -0.4 # initial slope guess
+    step_volume = 0
+    print ("\n\nStarting gradient descent at b = {0}, m = {1}, error = {2}".format(initial_b, initial_m, compute_error_for_line_given_points(initial_b, initial_m, points)))
+    print ("Running...")
+    [b, m] = gradient_descent_runner(points, initial_b, initial_m, learning_rate, step_volume)
+    print ("After {0} iterations b = {1}, m = {2}, error = {3}".format(step_volume, b, m, compute_error_for_line_given_points(b, m, points)))
+
     linepoints = getLinePoints(b, m, y_vals)
 
     xy_chart = pygal.XY(stroke=False)
     xy_chart.title = 'pls werk'
     xy_chart.add('Values', xy_vals)
-    gradientd_graf.add('Values', xy_vals)
     xy_chart.add('Prediction', linepoints)
     xy_chart.render_to_file('pls_werk.svg')
+
+    gradientd_graf.title = 'gradient_descent_grafaroo'
+    gradientd_graf.add('Values', xy_vals)
     gradientd_graf.render_to_file('gradientd_graf.svg')
+
+    costvstime_graf.title = 'Cost function values for learning rate = 0.000000002'
+    costvstime_graf.add('Cost values', costvals)
+    costvstime_graf.x_labels = map(str, range(every_nvalues, (len(costvals) + 1) * every_nvalues)[0::every_nvalues])
+    
+    costvstime_graf.render_to_file('costvstime_graf.svg')
 
 if __name__ == '__main__':
     run()
