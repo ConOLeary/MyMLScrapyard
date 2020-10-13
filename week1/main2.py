@@ -117,17 +117,16 @@ def run():
     xy_vals[1] = norm_xy_vals[1]
     xy_vals[0] = norm_xy_vals[0]
     points = zip(xy_vals[0], xy_vals[1])
-
-    learning_rate = 0.00001
-    initial_b = 0.85 # initial y-intercept guess
+    graf1.add('Values', points)
+    learning_rate = 0.0038
+    initial_b = 0.5 # initial y-intercept guess
     initial_m = 0 # initial slope guess
-    amount_of_steps = 2000
+    amount_of_steps = 6000
     print ("\n\nStarting gradient descent at b = {0}, m = {1}, error = {2}".format(initial_b, initial_m, compute_error_for_line_given_points(initial_b, initial_m, points)))
     print ("Running...")
     [b, m] = gradient_descent_runner(graf1, points, initial_b, initial_m, learning_rate, amount_of_steps)
     print ("After {0} iterations b = {1}, m = {2}, error = {3}".format(amount_of_steps, b, m, compute_error_for_line_given_points(b, m, points)))
     graf1.title = 'pls werk'
-    graf1.add('Values', points)
     graf1.render_to_file('graf1.svg')
 '''
     initial_b = 0.5 # initial y-intercept guess
