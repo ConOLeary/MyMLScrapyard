@@ -7,11 +7,12 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt
 
-SHOW_EVERY_NSTEPS = 200
+SHOW_EVERY_NSTEPS = 500
 
-graf1 = pygal.XY(stroke=False)
-graf2 = pygal.XY(stroke=False)
-costvstime_graf = pygal.Line(x_title='Number of steps taken', y_title='Cost')
+graf1 = pygal.XY(stroke=False, x_title='Normalised X values', y_title='Normalised Y values')
+graf2 = pygal.XY(stroke=False, x_title='Normalised X values', y_title='Normalised Y values')
+nullgraf = pygal.XY() #A blank graph I use when I need a graph as a parameter
+costvstime_graf = pygal.Line(x_title='Every 500th step taken', y_title='Cost')
 costvals = []
 
 ####################################################################################################
@@ -37,18 +38,18 @@ def step_gradient(b_current, m_current, points, learningRate):
     new_m = m_current - (learningRate * m_gradient)
     return [new_b, new_m]
 
-def gradient_descent_runner(graf, points, starting_b, starting_m, learning_rate, amount_of_steps):
+def gradient_descent_runner(graf, points, starting_b, starting_m, learning_rate, amount_of_steps, record_costs):
     b = starting_b
     m = starting_m
-    addLineToGraf(graf, b, m, len(points))
     for i in range(amount_of_steps):
         [b, m] = step_gradient(b, m, points, learning_rate)
         #print("m is now: ",m)
         if (i % SHOW_EVERY_NSTEPS == 0):
             #print(">>>>>>inside SHOW_EVERY_NSTEPS loop")
-            addLineToGraf(graf, (b), m, len(points))
+            #addLineToGraf(graf, (b), m, len(points))
             #print(xys)
-            costvals.append(compute_error_for_line_given_points(b, m, points))
+            if(record_costs):
+                costvals.append(compute_error_for_line_given_points(b, m, points))
     return [b, m]
 
 ####################################################################################################
@@ -108,53 +109,61 @@ def run():
             i = i + 1
     norm_xy_vals[1] = normalise_data(xy_vals[1])
     norm_xy_vals[0] = normalise_data(xy_vals[0])
-    print("len(norm_xy_vals[1]): ",len(norm_xy_vals[1]))
-    print("len(norm_xy_vals[0]): ",len(norm_xy_vals[0]))
-    print("len(xy_vals[0]): ",len(xy_vals[0]))
-    print("len(xy_vals[1]): ",len(xy_vals[1]))
 
     points = zip(norm_xy_vals[0], norm_xy_vals[1])
-    graf1.add('Values', points)
-    learning_rate = 0.0038
+    learning_rate = 0.004
     initial_b = 0.5 # initial y-intercept guess
     initial_m = 0 # initial slope guess
     amount_of_steps = 6000
     print ("\n\nStarting gradient descent at b = {0}, m = {1}, error = {2}".format(initial_b, initial_m, compute_error_for_line_given_points(initial_b, initial_m, points)))
     print ("Running...")
-    [b, m] = gradient_descent_runner(graf1, points, initial_b, initial_m, learning_rate, amount_of_steps)
+    graf1.add('Values', points)
+    [b, m] = gradient_descent_runner(graf1, points, initial_b, initial_m, learning_rate, amount_of_steps, False)
+    addLineToGraf(graf1, b, m, len(points))
     print ("After {0} iterations b = {1}, m = {2}, error = {3}".format(amount_of_steps, b, m, compute_error_for_line_given_points(b, m, points)))
-    graf1.title = 'pls werk'
+    graf1.title = "Gradient descent visualisation. Every 500th step is shown as a 'Prediction'."
     graf1.render_to_file('graf1.svg')
     
+    learning_rate = 0.04
+    [b, m] = gradient_descent_runner(nullgraf, points, initial_b, initial_m, learning_rate, amount_of_steps, True)
+    learning_rate = 0.004
+    [b, m] = gradient_descent_runner(nullgraf, points, initial_b, initial_m, learning_rate, amount_of_steps, True)
+    learning_rate = 0.0004
+    [b, m] = gradient_descent_runner(nullgraf, points, initial_b, initial_m, learning_rate, amount_of_steps, True)
+    lencosts = amount_of_steps/SHOW_EVERY_NSTEPS
+    costs1 = costvals[0:lencosts]
+    costs2 = costvals[lencosts:(lencosts * 2)]
+    costs3 = costvals[(lencosts * 2):(lencosts * 3)]
+    costvstime_graf.title = 'Cost function values over gradient descent steps for differing learning rates'
+    costvstime_graf.add('LR = 0.04', costs1)
+    costvstime_graf.add('LR = 0.004', costs2)
+    costvstime_graf.add('LR = 0.0004', costs3)
+    costvstime_graf.x_labels = map(str, range(0, int(amount_of_steps/SHOW_EVERY_NSTEPS)))
+    costvstime_graf.render_to_file('costvstime_graf.svg')
+
     initial_b = 0.5 # initial y-intercept guess
     initial_m = 0 # initial slope guess
     amount_of_steps = 0
     graf2.add('Values', points)
     print ("\n\nStarting gradient descent at b = {0}, m = {1}, error = {2}".format(initial_b, initial_m, compute_error_for_line_given_points(initial_b, initial_m, points)))
     print ("Running...")
-    [b, m] = gradient_descent_runner(graf2, points, initial_b, initial_m, learning_rate, amount_of_steps)
+    [b, m] = gradient_descent_runner(graf2, points, initial_b, initial_m, learning_rate, amount_of_steps, False)
     print ("After {0} iterations b = {1}, m = {2}, error = {3}".format(amount_of_steps, b, m, compute_error_for_line_given_points(b, m, points)))
     graf2.title = 'gradient_descent_grafaroo'
     graf2.render_to_file('graf2.svg')
     
     Xs = pd.DataFrame(norm_xy_vals[0], xy_vals[0])#.T
     Ys = pd.DataFrame(norm_xy_vals[1], xy_vals[0])
-    print("\n Ys")
-    print(Ys)
-    print("\n Xs")
-    print(Xs)
-    
+    #print("\n Ys")
+    #print(Ys)
+    #print("\n Xs")
+    #print(Xs)
     plt.interactive(True)
     model = LinearRegression()
     model.fit(Xs, Ys)
     plt.scatter(Xs, Ys)
     plt.plot(Xs, model.predict(Xs))
     plt.show()
-
-    costvstime_graf.title = 'Cost function values for learning rate = 0.0038'
-    costvstime_graf.add('Cost values', costvals)
-    costvstime_graf.x_labels = map(str, range(0, int(amount_of_steps/SHOW_EVERY_NSTEPS)))
-    costvstime_graf.render_to_file('costvstime_graf.svg')
 
 if __name__ == '__main__':
     run()
